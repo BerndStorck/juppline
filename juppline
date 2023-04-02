@@ -1,0 +1,38 @@
+#! /bin/bash
+#
+# juppline
+#
+# Opens the text editor jupp at the first line of aq file containing a user given string.
+#
+
+function hilfe()
+{
+  echo " 
+ AUFRUF:
+ juppline zu_findender_Text Dateiname
+"
+}
+function help()
+{
+  echo " 
+ CALL:
+ juppline string_to_find file_name
+"
+}
+
+case "$1" in
+  --hilf)
+    hilfe
+    exit 0
+    ;;
+  --help|-h)
+    help
+    exit 0
+    ;;
+esac    
+
+if [ "$(grep -c "$1" "$2")" -gt 0 ]; then
+	eval "jupp +$(grep -n -m1 "$1" "$2" | cut -d: -f1) $2"
+else
+	jupp "$2"
+fi
