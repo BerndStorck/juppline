@@ -1,18 +1,18 @@
 #! /bin/bash
 #
-# juppline 1.1.0
+# juppline 1.1.1
 #
 # Opens the text editor jupp at the first line of a file containing a user given string.
 #
 
-function hilfe {
+function help_de {
  echo " 
  AUFRUF:
  juppline zu_findender_Text Dateiname
 "
 }
 
-function en_help {
+function help_en {
  echo " 
  CALL:
  juppline string_to_find file_name
@@ -21,14 +21,14 @@ function en_help {
 
 case "$1" in
   --hilf)
-    hilfe
+    help_de
     exit 0
     ;;
   --help|-h)
     if [ "${LANG:0:2}" != 'de' ]; then
-      en_help
+      help_en
     else
-      hilfe
+      help_de
     fi
     exit 0
     ;;
