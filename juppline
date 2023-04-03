@@ -1,19 +1,19 @@
 #! /bin/bash
 #
-# juppline 1.0.1
+# juppline 1.1.0
 #
-# Opens the text editor jupp at the first line of aq file containing a user given string.
+# Opens the text editor jupp at the first line of a file containing a user given string.
 #
 
 function hilfe {
-  echo " 
+ echo " 
  AUFRUF:
  juppline zu_findender_Text Dateiname
 "
 }
 
 function en_help {
-  echo " 
+ echo " 
  CALL:
  juppline string_to_find file_name
 "
@@ -34,8 +34,11 @@ case "$1" in
     ;;
 esac
 
-if [ "$(grep -c "$1" "$2")" -gt 0 ]; then 
-   eval "jupp +$(grep -n -m1 "$1" "$2" | cut -d: -f1) $2"
+searched="$(grep -n -m1 "$1" "$2")"
+if [ -n "$searched" ]; then
+  jupp +"${searched%%:*}" "$2"
 else
   jupp "$2"
 fi
+
+exit 0
