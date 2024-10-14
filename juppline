@@ -1,23 +1,134 @@
 #! /bin/bash
 #
-# juppline 1.1.1
+# juppline 
+# Version: Look at the first constant definitions below!
 #
-# Opens the text editor jupp at the first line of a file containing a user given string.
+# Project Description:
+#   en: Opens the text editor jupp at the first line of a file containing a user given string.
+#   de: Öffnet den Texteditor Jupp in der ersten Zeile einer Datei, die eine vom Benutzer angegebene Zeichenfolge enthält.
 #
+# Usage:
+# juppline "word" <filename>
+#
+# Dependencies:
+# - jupp
+#
+# Author:    Bernd Storck
+# Contact:   https://www.facebook.com/BStLinux/
+#
+# History:   …, 2024-10-14
+#
+# Copyright: 2024, Bernd Storck
+# License:   GNU General Public License 3.0
+#
+
+
+# set -x
+
+# > Value settings: < =======================================================
+
+# > Constants: < ------------------------------------------------------------
+
+readonly SCRIPT_NAME="juppline"  # original script name
+readonly VERSION="1.1.2"
+readonly CURRENT_SCRIPT_NAME="${0##*/}"  # Saves the basename of the script file.
+
+# > Defaults: < ------------------------------------------------------------
+
+lang="de"         # Default output language
+
+# > Functions: < ============================================================
 
 function help_de {
  echo " 
+ $HELP_TITLE
+
  AUFRUF:
- juppline zu_findender_Text Dateiname
+    juppline zu_findender_Text Dateiname
+ 
+ $EXAMPLES
 "
 }
 
 function help_en {
  echo " 
+ $HELP_TITLE
+ 
  CALL:
- juppline string_to_find file_name
+    juppline string_to_find file_name
+ 
+ $EXAMPLES
 "
 }
+
+define_output_phrases () {
+
+  if [ "$UILANG" = "Deutsch" ]; then  # Define message strings according to the used language.
+    SHORT_PROGRAM_DESCRIPTION="Öffnet eine Datei mit dem Texteditor Jupp bei der angegebenen Zeichenfolge."
+    ERROR="FEHLER"
+    WARNING="WARNUNG"
+    ERR_NO_EDITOR="FEHLER: Texteditor nicht gefunden."
+    ALREADY_EXISTS="Die Datei existiert schon."
+    MISSING_FILE="Die Datei gibt es nicht."
+    MISSING_THIS_FILE="Die angegebene Datei 'XXX' existiert nicht."
+    MISSING_PARAMETER="Bitte zwei Argumente angeben."
+    MENU_PROMPT="Ihre Wahl: "
+    OVERWRITE="Überschreiben"
+    CANCEL="Abbruch"
+    INVALID_CHOICE="Ungültige Auswahl!"
+    END="Beenden"
+
+    CURRENT_NAME_PRAEFIX="Aktueller Dateiname:"
+    EXAMPLES="AUFRUFBEISPIELE:
+    $CURRENT_SCRIPT_NAME usage repsign.sh           # Springt mit 'jupp' zum ersten \"usage\" in der Datei 'repsign.sh'.
+    $CURRENT_SCRIPT_NAME \"> main <\" transkript.sh   # Öffnet 'transkript.sh' in der ersten Zeile, die \"> main <\" enthält."
+
+  else
+    SHORT_PROGRAM_DESCRIPTION="Opens a file using the Jupp text editor at the specified string."
+    ERROR="ERROR"
+    WARNING="WARNING"
+    ERR_NO_EDITOR="ERROR: Editor not found."
+    ALREADY_EXISTS="This file already exists."
+    MISSING_FILE="File does not exist."
+    MISSING_THIS_FILE="The specified file 'XXX' does not exist."
+    MISSING_PARAMETER="Please provide two arguments."
+    MENU_PROMPT="Your choice: "
+    OVERWRITE="Overwrite"
+    CANCEL="Cancel"
+    INVALID_CHOICE="Invalid choice!"
+    END="Terminate"
+
+    CURRENT_NAME_PRAEFIX="Current file name:"
+    EXAMPLES="EXAMPLES:
+    $CURRENT_SCRIPT_NAME usage repsign.sh           # Jumps to the first \"usage\" in the file 'repsign.sh' with 'jupp'.
+    $CURRENT_SCRIPT_NAME \"> main <\" transkript.sh   # Opens 'transkript.sh' at the first line containing \"> main <\"."
+  fi
+
+  HELP_TITLE="${SCRIPT_NAME^^} $VERSION
+    $SHORT_PROGRAM_DESCRIPTION"
+
+# if [ -n "$lang" ] && [ "${lang,,}" != "de" ]; then  # Define message strings for the output file.
+#   HEADER_VIDEO_TITLE="Video title"
+#   HEADER_VIDEO_URL="URL"
+#   HEADER_YOUTUBE_CHANNEL="Youtube channel"
+#   HEADER_UPLOAD_DAY="Upload date"
+# elif [ "${lang,,}" = "de" ]; then
+#   HEADER_VIDEO_TITLE="Video-Titel"
+#   HEADER_VIDEO_URL="URL"
+#   HEADER_YOUTUBE_CHANNEL="Youtube-Kanal"
+#   HEADER_UPLOAD_DAY="Upload-Datum"
+# fi  
+}
+
+
+# > main < ============================================================
+
+# Sets a flag variable for the user interface language:
+[ "${LANG::2}" = "de" ] && UILANG="Deutsch" || UILANG="English"
+
+define_output_phrases
+
+# > Call parameter Analysis: < ----------------------------------------
 
 case "$1" in
   --hilf)
@@ -25,18 +136,48 @@ case "$1" in
     exit 0
     ;;
   --help|-h)
-    if [ "${LANG:0:2}" != 'de' ]; then
-      help_en
-    else
-      help_de
-    fi
+    [[ "${LANG:0:2}" != 'de' ]] && help_en || help_de
     exit 0
     ;;
-esac
+    --examples|--beispiele)
+    plotLine
+    echo "${EXAMPLES}$EXAMPLES_MORE"
+    echo "$line"
+    exit
+    ;;
+  --version|-V|-\#)   # For possible bug reports.
+    define_output_phrases  # Define language dependent string constants.
+    answer=
+    if [ "$1" = "--version" ] || [ "$1" = "-V" ]; then
+        answer="$SCRIPT_NAME "
+    fi
+    answer="${answer}$VERSION"
+    if [ "$1" != '-#' ] && [ "$CURRENT_SCRIPT_NAME" != "$SCRIPT_NAME" ]; then
+      answer="${answer} ($CURRENT_NAME_PRAEFIX $CURRENT_SCRIPT_NAME)"
+    fi
+    echo "$answer"
+    exit 0
+    ;;
+  esac
 
+# Check arguments
+if [[ $# -ne 2 || -z "$1" || -z "$2" ]]; then
+    echo "$ERROR: $MISSING_PARAMETER" >&2
+    exit 1
+fi
+
+# Check if file exists
+if [[ ! -f "$2" ]]; then
+    message="$(sed -E "s/XXX/$2/" <<< "$MISSING_THIS_FILE")"
+    echo "$ERROR: $message" >&2
+    exit 1
+fi
+
+# Search for the string and open the editor
 searched="$(grep -n -m1 "$1" "$2")"
 if [ -n "$searched" ]; then
-  jupp +"${searched%%:*}" "$2"
+  line_number="${searched%%:*}"
+  jupp +"${line_number}" "$2"
 else
   jupp "$2"
 fi
